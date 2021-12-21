@@ -1,5 +1,5 @@
-getHeaders();
-buildBreadcrumbs();
+//getHeaders();
+//buildBreadcrumbs();
 buildSections();
 $(document).foundation();
 
@@ -91,54 +91,109 @@ function scrollToTop() {
 }
 
 function buildSections() {
-    var element = $("main");
-    var headers = findTopHeader(element);
-    var top = headers.top;
-    var children = headers.children;
+    var headers = getHeaders();
+    console.log(headers);
+    //var element = $("main");
+    //var headers = findTopHeader(element);
+    var top = headers.menu.top;
+    var children = headers.menu.children;
 
     if (top.multiple !== undefined) {
         console.log('Mutliple top-level headers');
     }
     else {
-        console.log('Top is ' + top.attr('id'));
+        console.log('Top is ' + top.id);
     }
-    menuItems = $(document.createElement("ul"));
-    menuItems.addClass("vertical menu");
+    var menuItems = $(document.createElement("ul"));
+    menuItems.addClass("vertical menu accordion-menu");
+    menuItems[0].setAttribute("data-accordion-menu","");
+    menuItems[0].setAttribute("data-submenu-toggle","true");
 
     if (top.multiple !== undefined) {
         $('#section-menu').append(top.link);
     }
     else {
-        $('#section-menu').append("<a href='#" + top.attr('id') + "'>"+ top.text() + "</a>\n");
+        $('#section-menu').append("<a href='#" + top.id + "'>"+ top.innerText + "</a>\n");
     }
 
-    var subsections = element.find(children);
+    var curDepth = parseInt(children.substring(1))-1;
+    headers.arr.each(function() {
+        if ((top.multiple == undefined) && (this.id == top.id)) return;
+        console.log("Header id: " + this.id);
+        console.log("Tag: " + this.tagName);
+        
+        var $li = $('<li/>').append("<a href='#" + this.id + "'>" + $(this).text() + "</a>");
+        var depth = 0;
+        if (this.tagName.toLowerCase() == "p") {
+            if ($(this).attr("class").toLowerCase() == "heading7") { 
+                depth = 7;
+            }
+            else if  ($(this).attr("class").toLowerCase() == "heading8") { 
+                depth = 8;
+            }
+        }
+        else {
+           depth = parseInt(this.tagName.substring(1));
+        }
+        console.log("Depth: " + depth);
+        if(depth > curDepth) { // going deeper
+            var $ul = $('<ul/>');
+            $ul.addClass("vertical menu nested");
+            $ul.append($li);
+            menuItems.append($ul);
+            menuItems = $li;
+        } 
+        else if (depth < curDepth) { // going shallower
+            console.log("Pull up to " + (curDepth - depth - 1) );
+            console.log("the node is below");
+            console.log(menuItems.parents('ul:eq(' + (curDepth - depth - 1) + ')')); 
+
+            menuItems.parents('ul:eq(' + (curDepth - depth) + ')').append($li);
+            menuItems = $li;
+        } 
+        else { // same level
+            menuItems.parent().append($li);
+            menuItems = $li;
+        }
+
+        curDepth = depth;
+    });
+    menuItems = menuItems.parents('ul:last');
+    /*
+    var subsections = top.find(children);
     subsections.each(function() {
         menuItems.append("<li><a href='#" + $(this).attr('id') + "'>" + $(this).text() + "</a></li>\n");
         $('#tf-small-menu-list').append("<li><a href='#" + $(this).attr('id') + "'>" + $(this).text() + "</a></li>\n");
     });
+    */
     $('#section-menu').append(menuItems);
     //smallMenu.append(smallMenuList);
     //$('#tf-small-menu').append(smallMenu);
     
 }
 
-function findTopHeader(element) {
+function findTopHeader(tops) {
     var retValue = {};
-    retValue.top = element.find("h1");
-    console.log("How many h1? " +retValue.top.length)
-    if (retValue.top.length == 1) {
-        retValue.children = "h2";
+    //retValue.top = element.find("h1");
+    //console.log("How many h1? " +retValue.top.length)
+    if (tops.h1.length > 0) {
+        retValue.top=tops.h1;
+        console.log("How many h1? " +retValue.top.length);
+        if (retValue.top.length == 1) {
+            retValue.top = tops.h1[0];
+            retValue.children = "h2";
+        }
+        else if (retValue.top.length > 1) {
+            retValue.children = "h1";
+            retValue.top = {"multiple":true};
+        }
     }
-    else if (retValue.top.length > 1) {
-        retValue.children = "h1";
-        retValue.top = {"multiple":true};
-    }
-    else if (retValue.top['length'] == 0) {
-        retValue.top = element.find("h2");
+    else {
+        retValue.top = tops.h2;
         console.log("How many h2? " +retValue.top.length)
         if (retValue.top.length == 1) { 
-          retValue.children = "h3";
+            retValue.top = tops.h2[0];  
+            retValue.children = "h3";
         }
         else if (retValue.top.length > 1) {
             retValue.children="h2";
@@ -273,23 +328,35 @@ function googSearch() {
 }
 
 function getHeaders() {
-    var headers = $("h1, h2, h3, h4, h5, h6, .heading7, .heading8");
+    var headersArr = $("h1, h2, h3, h4, h5, h6, .heading7, .heading8");
     var anchor;
     var link;
-    console.log("how many? " + headers.length);
-    for (i=0; i<headers.length; i++) {
-        headers[i].append(" ");
+    var tops = { "h1" : [], "h2" : []};
+    console.log("how many? " + headersArr.length);
+    for (i=0; i<headersArr.length; i++) {
+        if (headersArr[i].localName.toLowerCase() == "h1") {
+            tops.h1.push(headersArr[i]);
+        }
+        if (headersArr[i].localName.toLowerCase() == "h2") {
+            tops.h2.push(headersArr[i]);
+        }
+        headersArr[i].append(" ");
         anchor = document.createElement("a");
         anchor.setAttribute("class","heading-link");
-        anchor.setAttribute("href", headers[i].baseURI.split("#")[0] + "#" + headers[i].id);
+        anchor.setAttribute("href", headersArr[i].baseURI.split("#")[0] + "#" + headersArr[i].id);
         anchor.setAttribute("title","Click to copy link");
         link = document.createElement("i");
         link.setAttribute("class","fi fi-link");
 
         anchor.appendChild(link);
 
-        headers[i].append(anchor);
+        headersArr[i].append(anchor);
     }
+    console.log(tops);
+    var headers = {};
+    headers.arr = headersArr;
+    headers.menu = findTopHeader(tops);
+    return headers;
 }
 
 //copy anchor link to clipboard on click
