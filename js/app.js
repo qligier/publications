@@ -371,3 +371,15 @@ $('.heading-link').click(function (e) {
     document.execCommand('copy');  
     //console.log('copied text : ', copyText); 
   });
+
+  $('#section-menu').on('down.zf.accordionMenu', function(e, target) {
+    console.log("menu expanded");
+    console.log(e);
+    console.log(target);
+  });
+
+  $('#section-menu').on('up.zf.accordionMenu', function(e, target) {
+    console.log("menu closed");
+    console.log(e);
+    console.log(target);
+  });
