@@ -93,6 +93,7 @@ function scrollToTop() {
 function buildSections() {
     var headers = getHeaders();
     console.log(headers);
+    buildBreadcrumbs(headers);
     //var element = $("main");
     //var headers = findTopHeader(element);
     var top = headers.menu.top;
@@ -117,6 +118,7 @@ function buildSections() {
     }
 
     var curDepth = parseInt(children.substring(1))-1;
+    var first = true;
     headers.arr.each(function() {
         if ((top.multiple == undefined) && (this.id == top.id)) return;
         console.log("Header id: " + this.id);
@@ -136,17 +138,25 @@ function buildSections() {
            depth = parseInt(this.tagName.substring(1));
         }
         console.log("Depth: " + depth);
+        console.log("Is it first? " + first);
         if(depth > curDepth) { // going deeper
-            var $ul = $('<ul/>');
-            $ul.addClass("vertical menu nested");
-            $ul.append($li);
-            menuItems.append($ul);
-            menuItems = $li;
+            if (first) {
+                menuItems.append($li);
+                menuItems = $li;
+                first = false;
+            }
+            else {
+                var $ul = $('<ul/>');
+                $ul.addClass("vertical menu nested");
+                $ul.append($li);
+                menuItems.append($ul);
+                menuItems = $li;
+            }
         } 
         else if (depth < curDepth) { // going shallower
             console.log("Pull up to " + (curDepth - depth - 1) );
             console.log("the node is below");
-            console.log(menuItems.parents('ul:eq(' + (curDepth - depth - 1) + ')')); 
+            console.log(menuItems.parents('ul:eq(' + (curDepth - depth) + ')')); 
 
             menuItems.parents('ul:eq(' + (curDepth - depth) + ')').append($li);
             menuItems = $li;
@@ -207,7 +217,7 @@ function findTopHeader(tops) {
     return retValue;
 }
 
-function buildBreadcrumbs() {
+function buildBreadcrumbs(headers) {
     if ($('.breadcrumbs').length < 1) {
         return;
     }
@@ -221,10 +231,10 @@ function buildBreadcrumbs() {
     var pathURLs = getURLs(pathParts);
     var crumbs = [];
 
-    var headers = findTopHeader($("main"));
+    //var headers = findTopHeader($("main"));
     var currText = "";
-    if (headers.top.multiple === undefined) {
-        currText=headers.top.text();
+    if (headers.menu.top.multiple === undefined) {
+        currText=headers.menu.top.innerText;
     }
 
     if (/^[0-9]$/.test(currText[0])) {
