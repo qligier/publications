@@ -163,6 +163,11 @@ body {
 	color: #212529;
 	}
 */
+
+html {
+	scroll-behavior: smooth;
+}
+
 html, body {
 	height: 100%;
 }

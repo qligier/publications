@@ -109,6 +109,7 @@ function buildSections() {
     menuItems.addClass("vertical menu accordion-menu");
     menuItems[0].setAttribute("data-accordion-menu","");
     menuItems[0].setAttribute("data-submenu-toggle","true");
+    //menuItems[0].setAttribute("data-magellan","");
 
     if (top.multiple !== undefined) {
         $('#section-menu').append(top.link);
@@ -124,7 +125,7 @@ function buildSections() {
         console.log("Header id: " + this.id);
         console.log("Tag: " + this.tagName);
         
-        var $li = $('<li/>').append("<a href='#" + this.id + "'>" + $(this).text() + "</a>");
+        var $li = $('<li id="m'+this.id+'" />').append("<a href='#" + this.id + "'>" + $(this).text() + "</a>");
         var depth = 0;
         if (this.tagName.toLowerCase() == "p") {
             if ($(this).attr("class").toLowerCase() == "heading7") { 
@@ -350,7 +351,9 @@ function getHeaders() {
         if (headersArr[i].localName.toLowerCase() == "h2") {
             tops.h2.push(headersArr[i]);
         }
+        //headersArr[i].prepend($('<section data-magellan-target="' + headersArr[i].id +'" />'));
         headersArr[i].append(" ");
+        //headersArr[i].setAttribute("data-magellan-target",headersArr[i].id);
         anchor = document.createElement("a");
         anchor.setAttribute("class","heading-link");
         anchor.setAttribute("href", headersArr[i].baseURI.split("#")[0] + "#" + headersArr[i].id);
@@ -386,10 +389,25 @@ $('.heading-link').click(function (e) {
     console.log("menu expanded");
     console.log(e);
     console.log(target);
+    console.log("scrollHeight", e.target.scrollHeight)
+    console.log("clientHeight", e.target.clientHeight)
+
+    if (e.target.scrollHeight>e.target.clientHeight) {
+        console.log("overflow!");
+    }
   });
 
   $('#section-menu').on('up.zf.accordionMenu', function(e, target) {
     console.log("menu closed");
     console.log(e);
     console.log(target);
+  });
+
+  $('#section-menu a').click(function(e) {
+    console.log("menu link clicked! " + $(this).attr("href"));
+    let $li = $(this).parent();
+    if (($li.attr("class" !== undefined)) && $li.hasClass("has-submenu-toggle")) {
+        console.log("Parent class " + $li.attr("class"));
+        $li.children("button").trigger("click");
+    }
   });
