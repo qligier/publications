@@ -580,3 +580,10 @@ strong code {
 	transition: color 0.2s ease-in;
 }
 
+/* #section-menu {
+	position: sticky;
+} */
+
+li.active {
+	border-left: 5px solid blue;
+}
