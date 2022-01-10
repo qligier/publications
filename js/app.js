@@ -1,10 +1,110 @@
-//getHeaders();
-//buildBreadcrumbs();
-buildSections();
-
+/** TOC State Variables
+ * @headerState - obejct listing the state of each header in the TOC - highlighted or not
+ * @visibleArr - array of currently visible headers
+ */
 const headerState = {};
 const visibleArr = [];
 const invisibleArr = [];
+
+//Build the Header links, breadcrumbs, and the TOC
+buildSections();
+
+
+$(document).foundation();
+
+console.log("compare 3.18 and 3.18.1 -> " + compareHeaders("3.18","3.18.1"));
+console.log("compare 3.18.2 and 3.18.1 -> " + compareHeaders("3.18.2","3.18.1"));
+console.log("compare 3.18.4.2 and 3.18.1 -> " + compareHeaders("3.18.4.2","3.18.4"));
+console.log("compare 3.18.5 and 3.18.5 -> " + compareHeaders("3.18.5","3.18.5"));
+// Generic AJAX GET client, handles variable number of arguments. 
+// All arguments are then passed to the call-back function, 
+// with the addition of the HTTP response body (passed as 
+// the first argument to the call-back function.
+var HttpClient = function () {
+    var args = Array.prototype.slice.call(arguments);
+    this.get = function (url, callback) {
+        var httpRequest = new XMLHttpRequest();
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+                args.unshift(httpRequest.responseText);
+                callback.apply(null, args);
+            }
+        }
+
+        httpRequest.open("GET", url, true);
+        httpRequest.send(null);
+    }
+}
+
+//Toggler functions
+$('[data-toggler]').on('on.zf.toggler', function () {
+    //var prefix = this.id.substr(0, this.id.lastIndexOf("-"));
+    //$('#' + prefix + '-more').html('Read more<i class="fi fi-arrows-expand" aria-hidden="true"></i>');
+    console.log('Toggler is On - ' + prefix);
+
+});
+
+$('[data-toggler]').on('off.zf.toggler', function () {
+    //var prefix = this.id.substr(0, this.id.lastIndexOf("-"));
+    //$('#' + prefix + '-more').html('Read less<i class="fi fi-arrows-compress" aria-hidden="true"></i>');
+    console.log('Toggler is Off - ' + prefix);
+});
+
+$('.iframe-toggle').click(function (event) {
+    console.log('Toggle clicked');
+    $('#audit-5.1.1').foundation('toggle');
+    event.preventDefault();
+});
+
+//Dynamic copyright year
+var currYear = new Date().getFullYear();
+$("#current-year").text(currYear);
+
+//Handle search
+$("#ihe-search-button").click(function () {
+    var searchValue = $("#ihe-search-field").val();
+    if (searchValue.length > 0) {
+        var query = escape("site:https://profiles.ihe.net " + searchValue);
+        window.location.href = "https://google.com/search?q=" + query;
+    }
+});
+
+$('#ihe-search-field').keypress(function (e) {
+    if (e.which == 13) {
+        $(this).blur();
+        $('#ihe-search-button').focus().click();
+    }
+});
+
+//Back to top
+$(function () {
+
+    $(document).on('scroll', function () {
+
+        if ($(window).scrollTop() > 100) {
+            $('.scroll-top-wrapper').addClass('show');
+        } else {
+            $('.scroll-top-wrapper').removeClass('show');
+        }
+    });
+
+    $('.scroll-top-wrapper').on('click', scrollToTop);
+});
+
+function scrollToTop() {
+    verticalOffset = typeof (verticalOffset) != 'undefined' ? verticalOffset : 0;
+    element = $('body');
+    offset = element.offset();
+    offsetTop = offset.top;
+    $('html, body').animate({ scrollTop: offsetTop }, 500, 'linear');
+}
+
+
+
+/** 
+ * Event listener to catch each header as it comes into view and exits the view
+ * @window.oldScroll - used to determine if we are scrolling down, or scrolling up
+ */
 window.oldScroll = 0;
 window.addEventListener('DOMContentLoaded', () => {
 
@@ -101,98 +201,7 @@ window.addEventListener('DOMContentLoaded', () => {
         observer.observe(header);
     });
 });
-$(document).foundation();
 
-console.log("compare 3.18 and 3.18.1 -> " + compareHeaders("3.18","3.18.1"));
-console.log("compare 3.18.2 and 3.18.1 -> " + compareHeaders("3.18.2","3.18.1"));
-console.log("compare 3.18.4.2 and 3.18.1 -> " + compareHeaders("3.18.4.2","3.18.4"));
-console.log("compare 3.18.5 and 3.18.5 -> " + compareHeaders("3.18.5","3.18.5"));
-// Generic AJAX GET client, handles variable number of arguments. 
-// All arguments are then passed to the call-back function, 
-// with the addition of the HTTP response body (passed as 
-// the first argument to the call-back function.
-var HttpClient = function () {
-    var args = Array.prototype.slice.call(arguments);
-    this.get = function (url, callback) {
-        var httpRequest = new XMLHttpRequest();
-        httpRequest.onreadystatechange = function () {
-            if (httpRequest.readyState == 4 && httpRequest.status == 200) {
-                args.unshift(httpRequest.responseText);
-                callback.apply(null, args);
-            }
-        }
-
-        httpRequest.open("GET", url, true);
-        httpRequest.send(null);
-    }
-}
-
-//Toggler functions
-$('[data-toggler]').on('on.zf.toggler', function () {
-    //var prefix = this.id.substr(0, this.id.lastIndexOf("-"));
-    //$('#' + prefix + '-more').html('Read more<i class="fi fi-arrows-expand" aria-hidden="true"></i>');
-    console.log('Toggler is On - ' + prefix);
-
-});
-
-$('[data-toggler]').on('off.zf.toggler', function () {
-    //var prefix = this.id.substr(0, this.id.lastIndexOf("-"));
-    //$('#' + prefix + '-more').html('Read less<i class="fi fi-arrows-compress" aria-hidden="true"></i>');
-    console.log('Toggler is Off - ' + prefix);
-});
-
-$('.iframe-toggle').click(function (event) {
-    console.log('Toggle clicked');
-    $('#audit-5.1.1').foundation('toggle');
-    event.preventDefault();
-});
-
-//execute body element functions
-/*for (i = 0; i < hr_functions.length; i++) {
-    hr_functions[i]();
-}*/
-
-var currYear = new Date().getFullYear();
-$("#current-year").text(currYear);
-
-//Handle search
-$("#ihe-search-button").click(function () {
-    var searchValue = $("#ihe-search-field").val();
-    if (searchValue.length > 0) {
-        var query = escape("site:https://profiles.ihe.net " + searchValue);
-        window.location.href = "https://google.com/search?q=" + query;
-    }
-});
-
-$('#ihe-search-field').keypress(function (e) {
-    if (e.which == 13) {
-        $(this).blur();
-        $('#ihe-search-button').focus().click();
-    }
-});
-
-//Back to top
-$(function () {
-
-    $(document).on('scroll', function () {
-
-        if ($(window).scrollTop() > 100) {
-            $('.scroll-top-wrapper').addClass('show');
-        } else {
-            $('.scroll-top-wrapper').removeClass('show');
-        }
-    });
-
-    $('.scroll-top-wrapper').on('click', scrollToTop);
-});
-
-function scrollToTop() {
-    verticalOffset = typeof (verticalOffset) != 'undefined' ? verticalOffset : 0;
-    element = $('body');
-    offset = element.offset();
-    offsetTop = offset.top;
-    $('html, body').animate({ scrollTop: offsetTop }, 500, 'linear');
-}
 
 function buildSections() {
     var headers = getHeaders();
@@ -430,14 +439,6 @@ function getURLs(pathParts) {
     return url;
 }
 
-function googSearch() {
-    var searchField = $("#ihe-search-field");
-    if (searchField && searchField.value) {
-        var query = encodeURIComponent("site:https://profiles.ihe.net " + searchField.value);
-        window.location.href = "https://google.com/search?q=" + query;
-    }
-}
-
 function getHeaders() {
     var headersArr = $("h1, h2, h3, h4, h5, h6, .heading7, .heading8");
     var anchor;
@@ -464,6 +465,8 @@ function getHeaders() {
         anchor.appendChild(link);
 
         headersArr[i].append(anchor);
+        headerState[headersArr[i].id] = "invisible";
+
     }
     console.log(tops);
     var headers = {};
